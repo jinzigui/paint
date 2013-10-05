@@ -7,7 +7,7 @@
 #include "优化的画线Dlg.h"
 #include "afxdialogex.h"
 #include"math.h"
-
+#include"Graph.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -85,6 +85,9 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_WM_MOUSEMOVE()
 	ON_COMMAND(ID_32775, &C优化的画线Dlg::OnOval)
 	ON_COMMAND(ID_32776, &C优化的画线Dlg::OnRound)
+	ON_COMMAND(ID_32776, &C优化的画线Dlg::OnRound)
+	ON_COMMAND(ID_32780, &C优化的画线Dlg::OnClear)
+	ON_WM_DRAWITEM()
 END_MESSAGE_MAP()
 
 
@@ -230,19 +233,7 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 		 pDC->Ellipse(CRect(m_startPoint,point));
 		 break;
 	 case 6:
-		 long int len=0;
-		 double a=0;
-		 double b=0;
-		 a=(point.x-m_startPoint .x)*(point.x-m_startPoint .x);
-		 b=(point.y-m_startPoint .y)*(point.y-m_startPoint .y);
-		 len=(long int)::sqrt(a+b);
-		 CPoint m_start,m_end;
-		 m_start.x=m_startPoint .x-len;
-		 m_start .y=m_startPoint .y-len;
-		 m_end.x=m_startPoint.x+len;
-		 m_end.x=m_startPoint.y+len;
-
-		pDC->Ellipse(CRect (m_start ,m_end));
+		 pDC->Ellipse(m_startPoint.x-50,m_startPoint.y-50,mpoint.x+50,mpoint.y+50);
 		 break;
 	 }
 	 m_Draw=false;
@@ -402,10 +393,126 @@ void C优化的画线Dlg::OnOval()   //椭圆
 	type=5;
 }
 
+//void C优化的画线Dlg::CirPot(int cx, int cy, int x, int y, CDC* pDC)
+//{
+//	pDC->SetPixelV((cx+x),(cy+y),m_color);
+//
+//	pDC->SetPixelV((cx+y),(cy+x),m_color);
+//
+//	pDC->SetPixelV((cx+y),(cy-x),m_color);
+//
+//	pDC->SetPixelV((cx+x),(cy-y),m_color);
+//
+//	pDC->SetPixelV((cx-x),(cy-y),m_color);
+//
+//	pDC->SetPixelV((cx-y),(cy-x),m_color);
+//
+//	pDC->SetPixelV((cx-y),(cy+x),m_color);
+//
+//	pDC->SetPixelV((cx-x),(cy+y),m_color);
+//
+//}
+
+
+//void C优化的画线Dlg::DrawRound(CPoint m_startPoint, CPoint m_endPoint, CDC* pDC)
+//{
+//	int t1=abs(m_endPoint.x-m_startPoint.x)*abs(m_endPoint.x-m_startPoint.x);
+//
+//	int t2=abs(m_endPoint.y-m_startPoint.y)*abs(m_endPoint.y-m_startPoint.y);
+//
+//	double r=sqrt(double(t1+t2))/2;
+//
+//	int cx=(m_startPoint.x+m_endPoint.x)/2;
+//
+//	int cy=(m_startPoint.y+m_endPoint.y)/2;
+//
+//	int x,y;
+//
+//	float d;
+//
+//	x=0;
+//
+//	y=r;
+//
+//	d=1-r;
+//
+//	CirPot(cx,cy,x,y,pDC);
+//
+//	while(x<y)
+//
+//	{
+//
+//		if(d<0)
+//
+//		{
+//
+//			d+=2*x+3;
+//
+//			x++;
+//
+//		}
+//
+//		else
+//
+//		{
+//
+//			d+=2*(x-y)+5;
+//
+//			x++;
+//
+//			y--;
+//
+//		}
+//
+//		CirPot(cx,cy,x,y,pDC);
+//
+//	}
+//}
+
 
 void C优化的画线Dlg::OnRound()
 {
 	// TODO: 在此添加命令处理程序代码
 	type=6;
+}
 
+
+void C优化的画线Dlg::OnClear()
+{
+	// TODO: 在此添加命令处理程序代码
+	Invalidate();
+}
+
+
+void C优化的画线Dlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	CDC* pDC=NULL;
+	CBrush *pBrush=CBrush ::FromHandle((HBRUSH )GetStockObject (NULL_BRUSH ));  //调用白色背景画刷会把文字给刷掉
+	pDC->SelectObject (pBrush );
+	for(int i=0;i<m_ptrArray.GetSize();i++)
+	{
+		switch(((CGraph*)m_ptrArray.GetAt(i))->m_nDrawType)
+		{
+		case 1:
+			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin );
+			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_ptEnd);
+			break;
+		case 2:
+			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			break;
+		case 3:
+			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_ptOrigin,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
+			break;
+		case 4:
+			OnMouseMove(NULL(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd),NULL );
+			break;
+		case 5:
+			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			break;
+		//case 6:
+
+		}
+	}
+	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
 }
