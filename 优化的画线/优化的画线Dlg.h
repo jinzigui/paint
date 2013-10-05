@@ -42,7 +42,11 @@ public:
 	afx_msg void mink();
 //	afx_msg void OnColor();
 	COLORREF m_color;
-//	afx_msg void OnBnClickedButton1();
-//	afx_msg void OnBnClickedButton1();
-	afx_msg void OnBnClickedButton3();
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMenu();
+	afx_msg void OnMink();
+	afx_msg void OnExit();
+	afx_msg void OnRectangle();
+	CPoint m_startPoint;
+	afx_msg void OnLine();
 };

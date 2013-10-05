@@ -54,6 +54,7 @@ C优化的画线Dlg::C优化的画线Dlg(CWnd* pParent /*=NULL*/)
 	, mpoint(0)
 	, lineStyle(3)
 	, lineWidth(3)	
+	, m_startPoint(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -68,10 +69,14 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_LBUTTONDOWN()
-	ON_BN_CLICKED(IDC_BUTTON1, &C优化的画线Dlg::线test)
 	ON_WM_LBUTTONUP()
 	ON_BN_CLICKED(IDC_BUTTON2, &C优化的画线Dlg::mink)
-	ON_BN_CLICKED(IDC_BUTTON3, &C优化的画线Dlg::OnBnClickedButton3)
+	ON_WM_RBUTTONDOWN()
+	ON_COMMAND(ID_Menu, &C优化的画线Dlg::OnMenu)
+	ON_COMMAND(ID_32777, &C优化的画线Dlg::OnMink)
+	ON_COMMAND(ID_32778, &C优化的画线Dlg::OnExit)
+	ON_COMMAND(ID_32773, &C优化的画线Dlg::OnRectangle)
+	ON_COMMAND(ID_32772, &C优化的画线Dlg::OnLine)
 END_MESSAGE_MAP()
 
 
@@ -116,7 +121,7 @@ BOOL C优化的画线Dlg::OnInitDialog()
 		fun=(MYFUNC)GetProcAddress(hInst, "SetLayeredWindowAttributes");
 		if(fun)
 		{  
-			fun(this->m_hWnd,0,150,2);   //修改该参数就可以改变窗口透明程度
+			fun(this->m_hWnd,0,95,3.5);   //修改该参数就可以改变窗口透明程度
 		}
 		FreeLibrary(hInst);
 	}
@@ -180,15 +185,9 @@ HCURSOR C优化的画线Dlg::OnQueryDragIcon()
 void C优化的画线Dlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	mpoint=point;
+	m_startPoint =point;
+	mpoint =point;
 	CDialogEx::OnLButtonDown(nFlags, point);
-}
-
-
-void C优化的画线Dlg::线test()
-{
-	// TODO: 在此添加控件通知处理程序代码
-	type=1;
 }
 
 
@@ -201,8 +200,18 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH ));
 	 pDC->SelectObject (&pen);
 	 pDC->SelectObject (&pBrush );
-	 pDC->MoveTo (mpoint );
-	  pDC->LineTo (point);
+	 switch(type)
+	 {
+	 case 1:
+		 pDC->MoveTo (m_startPoint  );
+		 pDC->LineTo (point );
+		 break;
+	 case 2:
+		 pDC->Rectangle (CRect(m_startPoint ,mpoint ));
+		 pDC->Rectangle (CRect(m_startPoint ,point));
+		 mpoint=point;
+		 break;
+	 }
 	CDialogEx::OnLButtonUp(nFlags, point);
 
 }
@@ -218,18 +227,24 @@ void C优化的画线Dlg::mink()
 
 
 
-
-//void C优化的画线Dlg::OnBnClickedButton1()
-//{
-//	// TODO: 在此添加控件通知处理程序代码
-//	CColorDialog dlg;
-//	dlg.DoModal ();
-//}
-
-
-void C优化的画线Dlg::OnBnClickedButton3()
+void C优化的画线Dlg::OnRButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: 在此添加控件通知处理程序代码
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	//右键弹出快捷键
+	CMenu menu;
+	menu.LoadMenuW(IDR_MENU1);
+	CMenu *pContextMenu=menu.GetSubMenu(0);
+	CPoint mpoint ;
+	GetCursorPos (&mpoint);
+	pContextMenu->TrackPopupMenu(TPM_LEFTALIGN|TPM_RIGHTBUTTON,mpoint.x,mpoint.y,AfxGetMainWnd());
+
+	CDialogEx::OnRButtonDown(nFlags, mpoint);
+}
+
+
+void C优化的画线Dlg::OnMenu()
+{
+	// TODO: 在此添加命令处理程序代码
 	CColorDialog dlg;
 	dlg.m_cc.Flags |=CC_RGBINIT;
 	dlg.m_cc.rgbResult=m_color;
@@ -237,5 +252,33 @@ void C优化的画线Dlg::OnBnClickedButton3()
 	{
 		m_color =dlg.m_cc.rgbResult;
 	}
-	dlg.DoModal ();
+}
+
+
+
+void C优化的画线Dlg::OnMink()
+{
+	// TODO: 在此添加命令处理程序代码
+	ShowWindow(SW_MINIMIZE );
+}
+
+
+void C优化的画线Dlg::OnExit()
+{
+	// TODO: 在此添加命令处理程序代码
+	OnExit ();
+}
+
+
+void C优化的画线Dlg::OnRectangle()
+{
+	// TODO: 在此添加命令处理程序代码
+	type=2;
+}
+
+
+void C优化的画线Dlg::OnLine()
+{
+	// TODO: 在此添加命令处理程序代码
+	type=1;
 }
