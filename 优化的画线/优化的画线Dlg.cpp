@@ -52,8 +52,8 @@ C优化的画线Dlg::C优化的画线Dlg(CWnd* pParent /*=NULL*/)
 	, type(0)
 	, draw(FALSE)
 	, mpoint(0)
-	, lineStyle(2)
-	, lineWidth(2)	
+	, lineStyle(3)
+	, lineWidth(3)	
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &C优化的画线Dlg::线test)
 	ON_WM_LBUTTONUP()
 	ON_BN_CLICKED(IDC_BUTTON2, &C优化的画线Dlg::mink)
+	ON_BN_CLICKED(IDC_BUTTON3, &C优化的画线Dlg::OnBnClickedButton3)
 END_MESSAGE_MAP()
 
 
@@ -115,7 +116,7 @@ BOOL C优化的画线Dlg::OnInitDialog()
 		fun=(MYFUNC)GetProcAddress(hInst, "SetLayeredWindowAttributes");
 		if(fun)
 		{  
-			fun(this->m_hWnd,0,128,2);   //修改该参数就可以改变窗口透明程度
+			fun(this->m_hWnd,0,150,2);   //修改该参数就可以改变窗口透明程度
 		}
 		FreeLibrary(hInst);
 	}
@@ -196,8 +197,8 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	CDC* pDC=GetDC();
     //设置画笔，颜色，并且选择到设备里面；
-     CPen pen(lineStyle , lineWidth,RGB(255,0,0));
-	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(RED_SHIFT ));
+     CPen pen(lineStyle , lineWidth,m_color );
+	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH ));
 	 pDC->SelectObject (&pen);
 	 pDC->SelectObject (&pBrush );
 	 pDC->MoveTo (mpoint );
@@ -213,4 +214,28 @@ void C优化的画线Dlg::mink()
 
 	ShowWindow(SW_MINIMIZE );
 	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+
+
+//void C优化的画线Dlg::OnBnClickedButton1()
+//{
+//	// TODO: 在此添加控件通知处理程序代码
+//	CColorDialog dlg;
+//	dlg.DoModal ();
+//}
+
+
+void C优化的画线Dlg::OnBnClickedButton3()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CColorDialog dlg;
+	dlg.m_cc.Flags |=CC_RGBINIT;
+	dlg.m_cc.rgbResult=m_color;
+	if(IDOK==dlg.DoModal ())
+	{
+		m_color =dlg.m_cc.rgbResult;
+	}
+	dlg.DoModal ();
 }

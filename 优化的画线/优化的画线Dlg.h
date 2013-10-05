@@ -40,4 +40,9 @@ public:
 	UINT lineWidth;
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void mink();
+//	afx_msg void OnColor();
+	COLORREF m_color;
+//	afx_msg void OnBnClickedButton1();
+//	afx_msg void OnBnClickedButton1();
+	afx_msg void OnBnClickedButton3();
 };
