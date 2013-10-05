@@ -51,4 +51,9 @@ public:
 	afx_msg void OnLine();
 	afx_msg void OnArrow();
 	void DrawArrow(CPoint p1, CPoint p2, double theta, double length);
+	afx_msg void OnDrawLine();
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	BOOL m_Draw;
+	afx_msg void OnOval();
+	afx_msg void OnRound();
 };

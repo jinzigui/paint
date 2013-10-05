@@ -57,6 +57,7 @@ C优化的画线Dlg::C优化的画线Dlg(CWnd* pParent /*=NULL*/)
 	, lineStyle(3)
 	, lineWidth(3)	
 	, m_startPoint(0)
+	, m_Draw(FALSE)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -80,6 +81,10 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_COMMAND(ID_32773, &C优化的画线Dlg::OnRectangle)
 	ON_COMMAND(ID_32772, &C优化的画线Dlg::OnLine)
 	ON_COMMAND(ID_32774, &C优化的画线Dlg::OnArrow)
+	ON_COMMAND(ID_32779, &C优化的画线Dlg::OnDrawLine)
+	ON_WM_MOUSEMOVE()
+	ON_COMMAND(ID_32775, &C优化的画线Dlg::OnOval)
+	ON_COMMAND(ID_32776, &C优化的画线Dlg::OnRound)
 END_MESSAGE_MAP()
 
 
@@ -190,6 +195,7 @@ void C优化的画线Dlg::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_startPoint =point;
 	mpoint =point;
+	m_Draw=true;
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -217,7 +223,29 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 	 case 3:
 		 DrawArrow (m_startPoint ,point,25,25);
 		 break;
+	 case 4:
+		 OnMouseMove( nFlags, point);
+		 break;
+	 case 5:
+		 pDC->Ellipse(CRect(m_startPoint,point));
+		 break;
+	 case 6:
+		 long int len=0;
+		 double a=0;
+		 double b=0;
+		 a=(point.x-m_startPoint .x)*(point.x-m_startPoint .x);
+		 b=(point.y-m_startPoint .y)*(point.y-m_startPoint .y);
+		 len=(long int)::sqrt(a+b);
+		 CPoint m_start,m_end;
+		 m_start.x=m_startPoint .x-len;
+		 m_start .y=m_startPoint .y-len;
+		 m_end.x=m_startPoint.x+len;
+		 m_end.x=m_startPoint.y+len;
+
+		pDC->Ellipse(CRect (m_start ,m_end));
+		 break;
 	 }
+	 m_Draw=false;
 	CDialogEx::OnLButtonUp(nFlags, point);
 
 }
@@ -337,4 +365,47 @@ void C优化的画线Dlg::DrawArrow(CPoint p1, CPoint p2, double theta, double length
 	dc.MoveTo(p2.x,p2.y);
 	dc.LineTo(P2x,P2y);
 	dc.SelectObject(oldpen);
+}
+
+
+void C优化的画线Dlg::OnDrawLine()
+{
+	// TODO: 在此添加命令处理程序代码
+	type=4;
+}
+
+
+void C优化的画线Dlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	if(type==4)
+	{
+		CDC* pDC=GetDC();
+    //设置画笔，颜色，并且选择到设备里面；
+     CPen pen(lineStyle , lineWidth,m_color );
+	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH ));
+	 pDC->SelectObject (&pen);
+	 if(m_Draw )
+	 {
+	pDC->MoveTo (m_startPoint );
+	pDC->LineTo(point);
+	m_startPoint=point;
+	 }
+	}
+	CDialogEx::OnMouseMove(nFlags, point);
+}
+
+
+void C优化的画线Dlg::OnOval()   //椭圆
+{
+	// TODO: 在此添加命令处理程序代码
+	type=5;
+}
+
+
+void C优化的画线Dlg::OnRound()
+{
+	// TODO: 在此添加命令处理程序代码
+	type=6;
+
 }
