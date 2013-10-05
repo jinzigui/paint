@@ -49,4 +49,6 @@ public:
 	afx_msg void OnRectangle();
 	CPoint m_startPoint;
 	afx_msg void OnLine();
+	afx_msg void OnArrow();
+	void DrawArrow(CPoint p1, CPoint p2, double theta, double length);
 };

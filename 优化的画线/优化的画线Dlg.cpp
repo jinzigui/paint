@@ -6,6 +6,8 @@
 #include "优化的画线.h"
 #include "优化的画线Dlg.h"
 #include "afxdialogex.h"
+#include"math.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -77,6 +79,7 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_COMMAND(ID_32778, &C优化的画线Dlg::OnExit)
 	ON_COMMAND(ID_32773, &C优化的画线Dlg::OnRectangle)
 	ON_COMMAND(ID_32772, &C优化的画线Dlg::OnLine)
+	ON_COMMAND(ID_32774, &C优化的画线Dlg::OnArrow)
 END_MESSAGE_MAP()
 
 
@@ -211,6 +214,9 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 		 pDC->Rectangle (CRect(m_startPoint ,point));
 		 mpoint=point;
 		 break;
+	 case 3:
+		 DrawArrow (m_startPoint ,point,25,25);
+		 break;
 	 }
 	CDialogEx::OnLButtonUp(nFlags, point);
 
@@ -281,4 +287,54 @@ void C优化的画线Dlg::OnLine()
 {
 	// TODO: 在此添加命令处理程序代码
 	type=1;
+}
+
+
+void C优化的画线Dlg::OnArrow()   //箭头
+{
+	// TODO: 在此添加命令处理程序代码
+	type =3;
+}
+
+
+void C优化的画线Dlg::DrawArrow(CPoint p1, CPoint p2, double theta, double length)
+{
+	theta=3.1415926*theta/180;//转换为弧度
+	double Px,Py,P1x,P1y,P2x,P2y;
+	//以P2为原点得到向量P2P1（P）
+	Px=p1.x-p2.x;
+	Py=p1.y-p2.y;
+	//向量P旋转theta角得到向量P1
+	P1x=Px*cos(theta)-Py*sin(theta);
+	P1y=Px*sin(theta)+Py*cos(theta);
+	//向量P旋转-theta角得到向量P2
+	P2x=Px*cos(-theta)-Py*sin(-theta);
+	P2y=Px*sin(-theta)+Py*cos(-theta);
+	//伸缩向量至制定长度
+	double x1,x2;
+	x1=sqrt(P1x*P1x+P1y*P1y);
+	P1x=P1x*length/x1;
+	P1y=P1y*length/x1;
+	x2=sqrt(P2x*P2x+P2y*P2y);
+	P2x=P2x*length/x2;
+	P2y=P2y*length/x2;
+	//平移变量到直线的末端
+	P1x=P1x+p2.x;
+	P1y=P1y+p2.y;
+	P2x=P2x+p2.x;
+	P2y=P2y+p2.y;
+	CClientDC dc(this);//获取客户窗口DC
+	CPen pen,pen1,*oldpen;
+	//CPen pen(lineStyle , lineWidth,m_color );
+	pen.CreatePen(lineStyle , lineWidth,m_color );;
+	pen1.CreatePen(lineStyle , lineWidth,m_color );;
+	oldpen=dc.SelectObject(&pen);
+	dc.MoveTo(p1.x,p1.y);
+	dc.LineTo(p2.x,p2.y);
+	dc.SelectObject(&pen1);
+	dc.MoveTo(p2.x,p2.y);
+	dc.LineTo(P1x,P1y);
+	dc.MoveTo(p2.x,p2.y);
+	dc.LineTo(P2x,P2y);
+	dc.SelectObject(oldpen);
 }
