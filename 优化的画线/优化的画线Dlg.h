@@ -45,7 +45,7 @@ public:
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMenu();
 	afx_msg void OnMink();
-	afx_msg void OnExit();
+//	afx_msg void OnExit();
 	afx_msg void OnRectangle();
 	CPoint m_startPoint;
 	afx_msg void OnLine();
@@ -60,7 +60,12 @@ public:
 //	void DrawRound(CPoint m_startPoint, CPoint m_endPoint, CDC* pDC);
 	afx_msg void OnRound();
 	afx_msg void OnClear();
-	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
+//	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
 private:
 	CPtrArray m_ptrArray;
+public:
+	afx_msg void OnOpen();
+//	afx_msg void OnClose();
+	afx_msg void OnClose();
+	CPoint m_ptOrigin;
 };

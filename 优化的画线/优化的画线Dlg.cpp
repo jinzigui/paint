@@ -58,6 +58,7 @@ C优化的画线Dlg::C优化的画线Dlg(CWnd* pParent /*=NULL*/)
 	, lineWidth(3)	
 	, m_startPoint(0)
 	, m_Draw(FALSE)
+	, m_ptOrigin(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -77,7 +78,6 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_WM_RBUTTONDOWN()
 	ON_COMMAND(ID_Menu, &C优化的画线Dlg::OnMenu)
 	ON_COMMAND(ID_32777, &C优化的画线Dlg::OnMink)
-	ON_COMMAND(ID_32778, &C优化的画线Dlg::OnExit)
 	ON_COMMAND(ID_32773, &C优化的画线Dlg::OnRectangle)
 	ON_COMMAND(ID_32772, &C优化的画线Dlg::OnLine)
 	ON_COMMAND(ID_32774, &C优化的画线Dlg::OnArrow)
@@ -88,6 +88,9 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_COMMAND(ID_32776, &C优化的画线Dlg::OnRound)
 	ON_COMMAND(ID_32780, &C优化的画线Dlg::OnClear)
 	ON_WM_DRAWITEM()
+	ON_BN_CLICKED(IDC_BUTTON1, &C优化的画线Dlg::OnOpen)
+	ON_WM_CLOSE()
+	ON_COMMAND(ID_Close, &C优化的画线Dlg::OnClose)
 END_MESSAGE_MAP()
 
 
@@ -180,8 +183,38 @@ void C优化的画线Dlg::OnPaint()
 	}
 	else
 	{
-		CDialogEx::OnPaint();
+		CDC* pDC=GetDC();
+	CBrush *pBrush=CBrush ::FromHandle((HBRUSH )GetStockObject (NULL_BRUSH ));  //调用白色背景画刷会把文字给刷掉
+	pDC->SelectObject (&pBrush );
+	CPen pen(lineStyle,lineWidth ,m_color);
+	pDC->SelectObject (&pen);
+	for(int i=0;i<m_ptrArray.GetSize();i++)
+	{
+		switch(((CGraph*)m_ptrArray.GetAt(i))->type )
+		{
+		case 1:
+			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint);
+			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_ptEnd);
+			break;
+		case 2:
+			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			break;
+		case 3:
+			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_startPoint,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
+			break;
+		case 4:
+			OnMouseMove(NULL(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd),NULL );
+			break;
+		case 5:
+			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			break;
+		//case 6:
+
+		}
 	}
+		
+	}
+	CDialogEx::OnPaint();
 }
 
 //当用户拖动最小化窗口时系统调用此函数取得光标
@@ -198,6 +231,7 @@ void C优化的画线Dlg::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	m_startPoint =point;
 	mpoint =point;
+	m_ptOrigin =point;
 	m_Draw=true;
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
@@ -235,8 +269,12 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 	 case 6:
 		 pDC->Ellipse(m_startPoint.x-50,m_startPoint.y-50,mpoint.x+50,mpoint.y+50);
 		 break;
+		
 	 }
+	 CGraph *pGraph=new CGraph(type ,m_startPoint ,point);
+	 m_ptrArray .Add(pGraph );
 	 m_Draw=false;
+	
 	CDialogEx::OnLButtonUp(nFlags, point);
 
 }
@@ -257,7 +295,7 @@ void C优化的画线Dlg::OnRButtonDown(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	//右键弹出快捷键
 	CMenu menu;
-	menu.LoadMenuW(IDR_MENU1);
+	menu.LoadMenu(IDR_MENU1);
 	CMenu *pContextMenu=menu.GetSubMenu(0);
 	CPoint mpoint ;
 	GetCursorPos (&mpoint);
@@ -288,11 +326,14 @@ void C优化的画线Dlg::OnMink()
 }
 
 
-void C优化的画线Dlg::OnExit()
-{
-	// TODO: 在此添加命令处理程序代码
-	OnExit ();
-}
+//void C优化的画线Dlg::OnExit()
+//{
+//	// TODO: 在此添加命令处理程序代码
+//	if(MessageBox ("确定要退出？"),"提示",MB_ICONINFORMATION|MB_YESNO==IDNO)
+//	{
+//		return ;
+//	}
+//}
 
 
 void C优化的画线Dlg::OnRectangle()
@@ -484,35 +525,82 @@ void C优化的画线Dlg::OnClear()
 }
 
 
-void C优化的画线Dlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
-{
-	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	CDC* pDC=NULL;
-	CBrush *pBrush=CBrush ::FromHandle((HBRUSH )GetStockObject (NULL_BRUSH ));  //调用白色背景画刷会把文字给刷掉
-	pDC->SelectObject (pBrush );
-	for(int i=0;i<m_ptrArray.GetSize();i++)
-	{
-		switch(((CGraph*)m_ptrArray.GetAt(i))->m_nDrawType)
-		{
-		case 1:
-			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin );
-			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_ptEnd);
-			break;
-		case 2:
-			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
-			break;
-		case 3:
-			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_ptOrigin,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
-			break;
-		case 4:
-			OnMouseMove(NULL(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd),NULL );
-			break;
-		case 5:
-			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
-			break;
-		//case 6:
+//void C优化的画线Dlg::OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct)
+//{
+//	// TODO: 在此添加消息处理程序代码和/或调用默认值
+//	CDC* pDC=NULL;
+//	CBrush *pBrush=CBrush ::FromHandle((HBRUSH )GetStockObject (NULL_BRUSH ));  //调用白色背景画刷会把文字给刷掉
+//	pDC->SelectObject (pBrush );
+//	for(int i=0;i<m_ptrArray.GetSize();i++)
+//	{
+//		switch(((CGraph*)m_ptrArray.GetAt(i))->m_nDrawType)
+//		{
+//		case 1:
+//			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin );
+//			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_ptEnd);
+//			break;
+//		case 2:
+//			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+//			break;
+//		case 3:
+//			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_ptOrigin,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
+//			break;
+//		case 4:
+//			OnMouseMove(NULL(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd),NULL );
+//			break;
+//		case 5:
+//			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_ptOrigin ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+//			break;
+//		//case 6:
+//
+//		}
+//	}
+//	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
+//}
 
-		}
+
+void C优化的画线Dlg::OnOpen()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	OPENFILENAME ofn;
+	char szFile[MAX_PATH];
+	ZeroMemory(&ofn,sizeof(ofn));//清零
+	ofn.lStructSize=sizeof(ofn);   //缓冲区的大小
+	ofn.lpstrFile=szFile;       //指向一对以空字符结束的过滤字符串的一个缓冲
+	ofn.lpstrFile[0]=TEXT('\0');
+	ofn.nMaxFile=sizeof(szFile);   ///指定lpstrFile缓冲的大小，以TCHARs为单位
+	ofn.lpstrFilter=TEXT("文件txt\0*.txt\0文件cpp\0*.cpp\0所有文件\0*.*\0");
+	ofn.nFilterIndex=2;///指定在文件类型控件中当前选择的过滤器的索引   
+	ofn.lpstrInitialDir=NULL;//指向以空字符结束的字符串，可以在这个字符串中指定初始目录
+	ofn.Flags=OFN_EXPLORER|OFN_PATHMUSTEXIST|OFN_FILEMUSTEXIST|OFN_ALLOWMULTISELECT|OFN_NOCHANGEDIR;
+	if(GetOpenFileName(&ofn))
+	{
+		MessageBox(NULL,szFile,MB_OK);
 	}
-	CDialogEx::OnDrawItem(nIDCtl, lpDrawItemStruct);
+}
+
+
+//void C优化的画线Dlg::OnClose()
+//{
+//	// TODO: 在此添加消息处理程序代码和/或调用默认值
+//	if(MessageBox ("确定要退出？"),"提示",MB_ICONINFORMATION|MB_YESNO==IDNO)
+//	{
+//		return ;
+//	}
+//	CDialogEx::OnClose();
+//}
+
+
+void C优化的画线Dlg::OnClose()
+{
+	// TODO: 在此添加命令处理程序代码
+	if(MessageBox ("确定要退出？","提示",MB_ICONINFORMATION | MB_YESNO)==IDNO)
+	{
+		return ;
+	}
+	else
+	{
+		OnOK();
+	}
+	CDialogEx::OnClose();
 }
