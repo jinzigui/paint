@@ -59,6 +59,7 @@ C优化的画线Dlg::C优化的画线Dlg(CWnd* pParent /*=NULL*/)
 	, m_startPoint(0)
 	, m_Draw(FALSE)
 	, m_ptOrigin(0)
+	, m_rect(FALSE)     //标志画矩型的状态
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -91,6 +92,7 @@ BEGIN_MESSAGE_MAP(C优化的画线Dlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &C优化的画线Dlg::OnOpen)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_Close, &C优化的画线Dlg::OnClose)
+	ON_WM_NCHITTEST()
 END_MESSAGE_MAP()
 
 
@@ -185,7 +187,7 @@ void C优化的画线Dlg::OnPaint()
 	{
 		CDC* pDC=GetDC();
 	CBrush *pBrush=CBrush ::FromHandle((HBRUSH )GetStockObject (NULL_BRUSH ));  //调用白色背景画刷会把文字给刷掉
-	pDC->SelectObject (&pBrush );
+	pDC->SelectObject (pBrush );
 	CPen pen(lineStyle,lineWidth ,m_color);
 	pDC->SelectObject (&pen);
 	for(int i=0;i<m_ptrArray.GetSize();i++)
@@ -193,20 +195,23 @@ void C优化的画线Dlg::OnPaint()
 		switch(((CGraph*)m_ptrArray.GetAt(i))->type )
 		{
 		case 1:
-			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint);
-			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_ptEnd);
+			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_stPoint);
+			pDC->LineTo (((CGraph*)m_ptrArray.GetAt(i))->m_toPoint );
+			((CGraph *)m_ptrArray .GetAt (i))->m_stPoint=((CGraph *)m_ptrArray .GetAt (i))->m_ptEnd ;
+			pDC->MoveTo(((CGraph*)m_ptrArray.GetAt (i))->m_stPoint);
 			break;
 		case 2:
-			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			pDC->Rectangle(CRect(((CGraph*)m_ptrArray.GetAt (i))->m_stPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
 			break;
 		case 3:
-			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_startPoint,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
+			DrawArrow (((CGraph *)m_ptrArray.GetAt(i))->m_stPoint,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,25,25);
 			break;
 		case 4:
-			OnMouseMove(NULL(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd),NULL );
+			OnMouseMove(m_nFlags,(((CGraph*)m_ptrArray.GetAt (i))->m_stPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd,((CGraph*)m_ptrArray.GetAt (i))->m_stPoint=((CGraph*)m_ptrArray.GetAt (i))->m_ptEnd) );
+			
 			break;
 		case 5:
-			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_startPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
+			pDC->Ellipse (CRect(((CGraph*)m_ptrArray.GetAt (i))->m_stPoint ,((CGraph *)m_ptrArray.GetAt(i))->m_ptEnd) );
 			break;
 		//case 6:
 
@@ -232,7 +237,8 @@ void C优化的画线Dlg::OnLButtonDown(UINT nFlags, CPoint point)
 	m_startPoint =point;
 	mpoint =point;
 	m_ptOrigin =point;
-	m_Draw=true;
+	m_Draw=true;     //自由画线
+	m_rect =true;   
 	CDialogEx::OnLButtonDown(nFlags, point);
 }
 
@@ -243,14 +249,17 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 	CDC* pDC=GetDC();
     //设置画笔，颜色，并且选择到设备里面；
      CPen pen(lineStyle , lineWidth,m_color );
-	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH ));
+	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(NULL_BRUSH ));
 	 pDC->SelectObject (&pen);
-	 pDC->SelectObject (&pBrush );
+	 pDC->SelectObject (pBrush );
+	 
 	 switch(type)
 	 {
 	 case 1:
 		 pDC->MoveTo (m_startPoint  );
-		 pDC->LineTo (point );
+		 pDC->LineTo (mpoint  );
+		 m_startPoint  =point;
+		 pDC->LineTo(m_startPoint );
 		 break;
 	 case 2:
 		 pDC->Rectangle (CRect(m_startPoint ,mpoint ));
@@ -271,10 +280,12 @@ void C优化的画线Dlg::OnLButtonUp(UINT nFlags, CPoint point)
 		 break;
 		
 	 }
-	 CGraph *pGraph=new CGraph(type ,m_startPoint ,point);
+	 pDC->SelectObject (pBrush );
+
+	 CGraph *pGraph=new CGraph(type ,nFlags,m_startPoint ,mpoint,point);
 	 m_ptrArray .Add(pGraph );
 	 m_Draw=false;
-	
+	 m_rect=false;
 	CDialogEx::OnLButtonUp(nFlags, point);
 
 }
@@ -359,6 +370,7 @@ void C优化的画线Dlg::OnArrow()   //箭头
 
 void C优化的画线Dlg::DrawArrow(CPoint p1, CPoint p2, double theta, double length)
 {
+	CPoint point;
 	theta=3.1415926*theta/180;//转换为弧度
 	double Px,Py,P1x,P1y,P2x,P2y;
 	//以P2为原点得到向量P2P1（P）
@@ -386,8 +398,8 @@ void C优化的画线Dlg::DrawArrow(CPoint p1, CPoint p2, double theta, double length
 	CClientDC dc(this);//获取客户窗口DC
 	CPen pen,pen1,*oldpen;
 	//CPen pen(lineStyle , lineWidth,m_color );
-	pen.CreatePen(lineStyle , lineWidth,m_color );;
-	pen1.CreatePen(lineStyle , lineWidth,m_color );;
+	pen.CreatePen(lineStyle , lineWidth,m_color );
+	pen1.CreatePen(lineStyle , lineWidth,m_color );
 	oldpen=dc.SelectObject(&pen);
 	dc.MoveTo(p1.x,p1.y);
 	dc.LineTo(p2.x,p2.y);
@@ -410,20 +422,44 @@ void C优化的画线Dlg::OnDrawLine()
 void C优化的画线Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
-	if(type==4)
+	CDC* pDC=GetDC();
+	//设置画笔，颜色，并且选择到设备里面；
+	CPen pen(lineStyle , lineWidth,m_color );
+	CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(NULL_BRUSH ));
+	pDC->SelectObject (&pen);
+	pDC->SelectObject (pBrush);
+	switch(type)
 	{
-		CDC* pDC=GetDC();
-    //设置画笔，颜色，并且选择到设备里面；
-     CPen pen(lineStyle , lineWidth,m_color );
-	 CBrush *pBrush=CBrush::FromHandle((HBRUSH)GetStockObject(WHITE_BRUSH ));
-	 pDC->SelectObject (&pen);
-	 if(m_Draw )
-	 {
-	pDC->MoveTo (m_startPoint );
-	pDC->LineTo(point);
-	m_startPoint=point;
-	 }
+	case 1:
+		if(m_rect )
+		{
+			pDC->SetROP2(R2_NOT);
+			pDC->MoveTo (m_startPoint  );
+			pDC->LineTo (mpoint  );
+			m_startPoint  =point;
+			pDC->LineTo(m_startPoint );
+		}
+		break;
+	case 2:
+		if(m_rect)
+		{
+			pDC->SetROP2(R2_NOT);
+			pDC->Rectangle (CRect(m_startPoint ,mpoint));
+			pDC->Rectangle(CRect(m_startPoint,point));
+			mpoint=point;
+		}
+		break;
+	case 4:
+		if(m_Draw )
+		{
+			pDC->MoveTo (m_startPoint );
+			pDC->LineTo(point);
+			m_startPoint=point;
+		}
+		break;
 	}
+	
+		
 	CDialogEx::OnMouseMove(nFlags, point);
 }
 
@@ -603,4 +639,15 @@ void C优化的画线Dlg::OnClose()
 		OnOK();
 	}
 	CDialogEx::OnClose();
+}
+
+
+LRESULT C优化的画线Dlg::OnNcHitTest(CPoint point)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	CRect rect;
+	GetClientRect(&rect);
+	ClientToScreen(&rect);
+	//return rect.PtInRect(point)? HTCAPTION:CDialog ::OnNcHitTest (point);
+	return CDialogEx::OnNcHitTest(point);
 }

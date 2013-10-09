@@ -47,7 +47,7 @@ public:
 	afx_msg void OnMink();
 //	afx_msg void OnExit();
 	afx_msg void OnRectangle();
-	CPoint m_startPoint;
+	
 	afx_msg void OnLine();
 	afx_msg void OnArrow();
 	void DrawArrow(CPoint p1, CPoint p2, double theta, double length);
@@ -61,11 +61,16 @@ public:
 	afx_msg void OnRound();
 	afx_msg void OnClear();
 //	afx_msg void OnDrawItem(int nIDCtl, LPDRAWITEMSTRUCT lpDrawItemStruct);
-private:
+public:
 	CPtrArray m_ptrArray;
 public:
 	afx_msg void OnOpen();
 //	afx_msg void OnClose();
 	afx_msg void OnClose();
 	CPoint m_ptOrigin;
+private:
+	CPoint m_startPoint;              //这个点弄了我好久
+public:
+	afx_msg LRESULT OnNcHitTest(CPoint point);
+	BOOL m_rect;
 };
